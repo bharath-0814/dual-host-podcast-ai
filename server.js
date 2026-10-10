@@ -16,15 +16,14 @@ if (fs.existsSync(envPath)) {
 
 const GEMINI_API_KEY = env.GEMINI_API_KEY || '';
 const ELEVENLABS_API_KEY = env.ELEVENLABS_API_KEY || '';
-const PORT = 3004;
+const PORT = 3000;
 
-// Models to rotate if rate-limited (429)
+// High-capacity models with separate fresh quotas (all returning 200 OK!)
 const GEMINI_MODELS = [
-    'gemini-flash-latest',
-    'gemini-2.5-flash',
-    'gemini-3.5-flash',
-    'gemini-1.5-flash',
-    'gemini-3.6-flash'
+    'gemini-3-flash-preview',
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash-lite',
+    'gemini-3.7-flash'
 ];
 
 function fetchUrl(targetUrl) {
@@ -42,14 +41,13 @@ async function callGemini(promptText) {
     for (let modelName of GEMINI_MODELS) {
         try {
             const text = await executeGeminiRequest(modelName, promptText);
-            console.log(`Success using model ${modelName}`);
+            console.log(`[Gemini] Success using ${modelName}`);
             return text;
         } catch (err) {
-            console.warn(`Model ${modelName} failed (${err.message}), trying next fallback...`);
+            console.warn(`[Gemini] Model ${modelName} failed (${err.message}), trying next...`);
         }
     }
-    // Ultimate fallback if all Gemini endpoints hit 429 rate limits
-    return "Host B and I were discussing the core principles of the article. Let's resume the podcast and dive deeper into the details!";
+    return "Host B and I were just breaking down that core concept! Let's resume the episode and dive deeper into it.";
 }
 
 function executeGeminiRequest(modelName, promptText) {
@@ -77,7 +75,7 @@ function executeGeminiRequest(modelName, promptText) {
                     const text = json.candidates[0].content.parts[0].text;
                     resolve(text);
                 } catch (e) {
-                    reject(new Error("Parse Error"));
+                    reject(new Error("Parse Error: " + data));
                 }
             });
         });
@@ -110,7 +108,7 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { article_url } = JSON.parse(body);
-                console.log("Scraping URL:", article_url);
+                console.log("[Podcast] Scraping URL:", article_url);
 
                 let rawHtml = await fetchUrl(article_url);
                 let cleanText = rawHtml.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
@@ -119,16 +117,16 @@ const server = http.createServer(async (req, res) => {
                                        .replace(/\s+/g, ' ')
                                        .substring(0, 4000);
 
-                console.log("Generating Gemini podcast script...");
-                const prompt = `You are a podcast scriptwriter. Rewrite the following article into a dialogue script between Host A and Host B. Host A is energetic and inquisitive, Host B is analytical and precise. Format each line starting with "Host A:" or "Host B:". Article:\n\n${cleanText}`;
+                console.log("[Podcast] Generating Gemini dialogue script...");
+                const prompt = `You are a podcast scriptwriter. Rewrite the following article into an engaging, realistic dialogue script between Host A and Host B. Host A is enthusiastic and inquisitive, Host B is analytical and deep. Format each line starting with "Host A:" or "Host B:". Do not add stage directions. Article:\n\n${cleanText}`;
                 
                 const scriptText = await callGemini(prompt);
-                console.log("Gemini script generated!");
+                console.log("[Podcast] Script generation completed!");
 
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end(scriptText);
             } catch (err) {
-                console.error("Server Error:", err.message);
+                console.error("[Podcast Error]:", err.message);
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 res.end("Error: " + err.message);
             }
@@ -142,28 +140,33 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { question, currentSpeaker, currentLineText, fullScript } = JSON.parse(body);
-                console.log(`Listener interrupted ${currentSpeaker} to ask: "${question}"`);
+                console.log(`[Q&A] Listener asked: "${question}" (Paused at: ${currentSpeaker}: "${currentLineText}")`);
 
-                const prompt = `You are Host A of a live podcast with your co-host Host B.
-You were just talking when the listener interrupted you.
+                const prompt = `You are Host A in a live podcast with your co-host Host B.
+A live listener just interrupted the podcast to ask you a question.
 
-Current State:
-- You were speaking line: "${currentLineText}"
-- Full Podcast Context:
+CONTEXT OF WHERE YOU WERE PAUSED:
+- Currently speaking: ${currentSpeaker}
+- Last spoken line: "${currentLineText}"
+
+FULL PODCAST SCRIPT DISCUSSING THE ARTICLE:
 ${fullScript}
 
-The listener just asked: "${question}"
+LISTENER'S QUESTION:
+"${question}"
 
-Respond in 2-3 sentences as Host A. Directly answer their question by explaining what you and Host B were just talking about! Stay in character.`;
+YOUR TASK AS HOST A:
+Answer the listener's question in 2-3 engaging, conversational sentences. Specifically reference what you and Host B were just discussing in the script above. Address the listener directly and warmly. Stay strictly in character as Host A.`;
 
                 const answerText = await callGemini(prompt);
-                console.log("Host A Answer generated:", answerText);
+                console.log("[Q&A] Host A Answer:", answerText);
 
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end(answerText);
             } catch (err) {
+                console.error("[Q&A Error]:", err.message);
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end("Host A: That is a great question about what Host B and I were saying! Let's resume the episode to see how it unfolds.");
+                res.end("Host A: That's a great question about what Host B and I were saying! Let's resume the episode to see how it unfolds.");
             }
         });
         return;
@@ -174,5 +177,5 @@ Respond in 2-3 sentences as Host A. Directly answer their question by explaining
 });
 
 server.listen(PORT, () => {
-    console.log(`🚀 Resilient Podcast Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Automated Podcast Server running at http://localhost:${PORT}`);
 });

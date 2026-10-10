@@ -3,85 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Audio Newsletter</title>
+    <title>Interactive Audio Newsletter - Dual Host Podcast</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            color: #1e293b;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 40px 20px;
+            padding: 24px;
         }
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 650px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            max-width: 680px;
             width: 100%;
+            padding: 32px;
             text-align: center;
         }
-        h1 { margin-top: 0; color: #111827; }
-        .input-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        input[type="url"], input[type="text"] { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; }
-        button {
-            background-color: #2563eb; color: white; border: none; padding: 12px 20px;
-            border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color 0.2s;
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        button:hover { background-color: #1d4ed8; }
-        .interrupt-btn { background-color: #dc2626; display: none; margin-top: 15px; font-weight: bold; }
-        .interrupt-btn:hover { background-color: #b91c1c; }
-        .stop-resume-btn {
-            background-color: #059669; color: white; border: none; padding: 12px 20px;
-            border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%;
+        p.subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.5;
         }
-        .stop-resume-btn:hover { background-color: #047857; }
-        
-        .qa-box {
-            margin-top: 20px; display: none; background: #fef2f2; border: 2px dashed #f87171;
-            padding: 20px; border-radius: 10px; text-align: left;
+        .input-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
         }
+        input[type="url"], input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: #2563eb; }
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 13px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        /* Persistent Interrupt Bar */
+        .interrupt-bar {
+            display: none;
+            margin-top: 20px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .interrupt-bar.active {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .interrupt-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .interrupt-bar-header span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .interrupt-bar.active .interrupt-bar-header span {
+            color: #b91c1c;
+        }
+        .chat-input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            position: relative;
+        }
+        .chat-input-wrapper input {
+            flex: 1;
+            padding: 11px 48px 11px 14px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .btn-send {
+            position: absolute;
+            right: 8px;
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-send:hover { background: #1d4ed8; }
+        .btn-mic {
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-mic:hover { background: #6d28d9; }
+        .btn-mic.listening {
+            background: #dc2626;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .btn-stop-resume {
+            width: 100%;
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none;
+        }
+        .btn-stop-resume:hover { background: #047857; }
+
+        /* Live Speaking & Subtitles Area */
         .now-playing {
-            margin-top: 20px; font-weight: bold; color: #059669; display: none;
-            padding: 15px; background: #d1fae5; border-radius: 8px; text-align: left;
+            margin-top: 20px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            display: none;
+        }
+        .speaker-badge {
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+        }
+        .speaker-badge.host-a { background: #dbeafe; color: #1e40af; }
+        .speaker-badge.host-b { background: #fef3c7; color: #92400e; }
+        .speaker-badge.host-answer { background: #fee2e2; color: #991b1b; }
+        .subtitles {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #334155;
+            font-style: italic;
+        }
+        #status-message {
+            margin-top: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2563eb;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🎙️ Dual-Host Podcast AI Platform</h1>
-        <p>Paste any article link. Listen to Host A & Host B discuss it, or interrupt to ask questions anytime!</p>
+        <h1>🎙️ Dual-Host Podcast AI</h1>
+        <p class="subtitle">Enter any article URL to generate a live dual-host podcast. You can interrupt by typing or using your mic anytime!</p>
         
-        <div class="input-group">
+        <div class="input-card">
             <input type="url" id="article-url" placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence" value="https://en.wikipedia.org/wiki/Artificial_intelligence" required>
             <input type="text" id="api-key" placeholder="ElevenLabs API Key (sk_...)" value="sk_5a308e5383029f6f3e95f88da7bbf0c3e18d55102a91c6a1">
-            <button onclick="generatePodcast()" id="gen-btn">Generate & Play Podcast</button>
-            <button onclick="triggerInterrupt()" id="interrupt-btn" class="interrupt-btn">🚨 INTERRUPT PODCAST & ASK QUESTION</button>
+            <button onclick="generatePodcast()" id="gen-btn" class="btn-primary">Generate & Start Podcast</button>
         </div>
 
-        <div id="status-message" style="margin-top: 15px; font-weight: bold; color: #2563eb;"></div>
+        <div id="status-message"></div>
 
-        <!-- Integrated Live Question Panel -->
-        <div id="qa-box" class="qa-box">
-            <h3 style="margin-top: 0; color: #991b1b;">🚨 Podcast Paused by Listener</h3>
-            <p style="font-size: 14px; color: #7f1d1d;">Ask Host A a question (using Mic or Text) about what was just discussed:</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="question-input" placeholder="e.g. Can you explain that in simpler terms?" style="flex: 1;">
-                <button onclick="startMicListen()" style="background-color: #7c3aed;">🎙️ Speak (Mic)</button>
-                <button onclick="submitQuestion()" style="background-color: #dc2626;">Ask Host A</button>
+        <!-- Integrated Live Interrupt & Ask Bar -->
+        <div id="interrupt-bar" class="interrupt-bar">
+            <div class="interrupt-bar-header">
+                <span id="interrupt-status-text">⏸️ Podcast Playing... Type or click Mic to interrupt!</span>
             </div>
-            <div id="qa-status" style="margin-top: 10px; font-weight: bold; color: #7c3aed; font-size: 14px;"></div>
-            
-            <!-- Stop & Resume Button requested by User -->
-            <button onclick="endQueryAndResume()" class="stop-resume-btn">🛑 Got My Answer! Stop Host A & Resume Podcast ▶️</button>
+            <div class="chat-input-wrapper">
+                <input type="text" id="question-input" placeholder="Type a question to interrupt (e.g., What is AGI?)" onfocus="pauseOnInputFocus()" onkeydown="handleInputKey(event)">
+                <button onclick="submitQuestion()" class="btn-send" title="Send question">➤</button>
+                <button onclick="toggleMicListen()" id="mic-btn" class="btn-mic">🎙️ Speak (Mic)</button>
+            </div>
+            <button onclick="endQueryAndResume()" id="stop-resume-btn" class="btn-stop-resume">🛑 Got My Answer! Resume Podcast with Host A & B ▶️</button>
         </div>
-        
+
+        <!-- Live Subtitles & Progress -->
         <div id="now-playing" class="now-playing">
-            <div style="font-size: 16px; margin-bottom: 5px;">▶️ Speaking: <span id="current-speaker" style="color: #2563eb;"></span></div>
-            <div id="current-text" style="font-weight: normal; font-size: 14px; color: #374151; font-style: italic;"></div>
+            <div id="speaker-badge" class="speaker-badge host-a">Host A</div>
+            <div id="current-text" class="subtitles"></div>
         </div>
     </div>
 
@@ -98,6 +249,8 @@
         let currentLineIndex = 0;
         let isInterrupted = false;
         let isAnswering = false;
+        let recognition = null;
+        let isListeningMic = false;
 
         async function generatePodcast() {
             stopAllAudio();
@@ -111,7 +264,7 @@
             document.getElementById('gen-btn').disabled = true;
 
             statusMsg.style.color = "#2563eb";
-            statusMsg.innerText = "Scraping article & Generating script via Gemini...";
+            statusMsg.innerText = "Scraping article & Generating dual-host script via Gemini...";
             
             try {
                 const response = await fetch(`${serverUrl}/generate-podcast`, {
@@ -123,11 +276,11 @@
                 rawFullScript = await response.text();
                 globalScriptData = parseTextScript(rawFullScript);
 
-                if (globalScriptData.length === 0) throw new Error("No script lines found.");
+                if (globalScriptData.length === 0) throw new Error("No script lines could be parsed.");
 
-                statusMsg.innerText = "✅ Script ready! Host A & Host B starting live broadcast...";
-                statusMsg.style.color = "green";
-                document.getElementById('interrupt-btn').style.display = 'block';
+                statusMsg.innerText = "✅ Script ready! Host A & Host B live broadcast started.";
+                statusMsg.style.color = "#059669";
+                document.getElementById('interrupt-bar').style.display = 'block';
                 document.getElementById('now-playing').style.display = 'block';
 
                 playScript(0);
@@ -135,7 +288,7 @@
             } catch (error) {
                 console.error("Error:", error);
                 statusMsg.innerText = "Error: " + error.message;
-                statusMsg.style.color = "red";
+                statusMsg.style.color = "#dc2626";
                 document.getElementById('gen-btn').disabled = false;
             }
         }
@@ -170,7 +323,7 @@
 
             for (let i = startIndex; i < globalScriptData.length; i++) {
                 if (isInterrupted) {
-                    currentLineIndex = i;
+                    currentLineIndex = i; // Save exact line index where paused
                     break;
                 }
 
@@ -178,7 +331,7 @@
                 const line = globalScriptData[i];
                 const voiceId = voices[line.speaker] || voices["Host A"];
                 
-                document.getElementById('current-speaker').innerText = line.speaker;
+                updateSpeakerBadge(line.speaker);
                 document.getElementById('current-text').innerText = `"${line.text}"`;
 
                 let played = false;
@@ -217,36 +370,91 @@
             }
 
             if (!isInterrupted) {
-                document.getElementById('now-playing').innerText = "📻 Podcast Episode Finished.";
-                document.getElementById('interrupt-btn').style.display = 'none';
+                document.getElementById('now-playing').style.display = 'block';
+                document.getElementById('speaker-badge').innerText = "📻 Finished";
+                document.getElementById('current-text').innerText = "Podcast episode has concluded.";
                 document.getElementById('gen-btn').disabled = false;
             }
         }
 
-        function triggerInterrupt() {
-            isInterrupted = true;
-            stopAllAudio();
-
-            document.getElementById('interrupt-btn').style.display = 'none';
-            document.getElementById('qa-box').style.display = 'block';
-            document.getElementById('status-message').innerText = "🚨 Podcast Paused! Host A is ready for your question.";
+        function updateSpeakerBadge(speaker) {
+            const badge = document.getElementById('speaker-badge');
+            badge.innerText = speaker;
+            badge.className = 'speaker-badge ' + (speaker === 'Host A' ? 'host-a' : (speaker === 'Host B' ? 'host-b' : 'host-answer'));
         }
 
-        function startMicListen() {
+        // Automatic Pause whenever user focuses the input bar to type
+        function pauseOnInputFocus() {
+            if (!isInterrupted && !isAnswering && globalScriptData.length > 0) {
+                isInterrupted = true;
+                stopAllAudio();
+                const bar = document.getElementById('interrupt-bar');
+                bar.classList.add('active');
+                document.getElementById('interrupt-status-text').innerText = "🚨 Podcast Paused! Type your question and click ➤ or Speak on Mic";
+                document.getElementById('stop-resume-btn').style.display = 'block';
+            }
+        }
+
+        function handleInputKey(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitQuestion();
+            }
+        }
+
+        // Mic listener toggle
+        function toggleMicListen() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Speech recognition not supported in this browser. Please type your question!");
+                alert("Speech recognition not supported in this browser. Please type your question in the text bar!");
                 return;
             }
-            const rec = new SpeechRecognition();
-            document.getElementById('qa-status').innerText = "🎙️ Listening to your mic... Speak now!";
-            rec.onresult = (e) => {
+
+            if (isListeningMic && recognition) {
+                recognition.stop();
+                return;
+            }
+
+            // Immediately pause the podcast conversation
+            isInterrupted = true;
+            stopAllAudio();
+            const bar = document.getElementById('interrupt-bar');
+            bar.classList.add('active');
+            document.getElementById('stop-resume-btn').style.display = 'block';
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.add('listening');
+            micBtn.innerText = "🛑 Listening...";
+            document.getElementById('interrupt-status-text').innerText = "🎙️ Listening to your voice... Speak your question now!";
+            isListeningMic = true;
+
+            recognition.onresult = (e) => {
                 const text = e.results[0][0].transcript;
                 document.getElementById('question-input').value = text;
-                document.getElementById('qa-status').innerText = `Recognized: "${text}"`;
+                document.getElementById('interrupt-status-text').innerText = `Recognized: "${text}"`;
                 submitQuestion();
             };
-            rec.start();
+
+            recognition.onerror = (e) => {
+                console.warn("Mic recognition error:", e.error);
+                micBtn.classList.remove('listening');
+                micBtn.innerText = "🎙️ Speak (Mic)";
+                isListeningMic = false;
+                document.getElementById('interrupt-status-text').innerText = "⚠️ Voice error. Please type your question and press ➤";
+            };
+
+            recognition.onend = () => {
+                micBtn.classList.remove('listening');
+                micBtn.innerText = "🎙️ Speak (Mic)";
+                isListeningMic = false;
+            };
+
+            recognition.start();
         }
 
         async function submitQuestion() {
@@ -254,9 +462,15 @@
             const q = document.getElementById('question-input').value.trim();
             if (!q) return;
 
+            // Pause whatever is playing
+            isInterrupted = true;
+            stopAllAudio();
             isAnswering = true;
-            const qaStatus = document.getElementById('qa-status');
-            qaStatus.innerText = "🤔 Host A is thinking about your question...";
+
+            const bar = document.getElementById('interrupt-bar');
+            bar.classList.add('active');
+            document.getElementById('stop-resume-btn').style.display = 'block';
+            document.getElementById('interrupt-status-text').innerText = "🤔 Host A is thinking and preparing an answer...";
 
             const currentLine = globalScriptData[currentLineIndex] || { speaker: "Host A", text: "" };
 
@@ -273,13 +487,13 @@
                 });
 
                 const answerText = await response.text();
-                qaStatus.innerText = "🗣️ Host A is answering your question out loud!";
+                document.getElementById('interrupt-status-text').innerText = "🗣️ Host A is answering your question out loud!";
                 
-                await speakHostAnswer("Host A", answerText);
+                await speakHostAnswer("Host A (Answering)", answerText);
 
             } catch (err) {
-                console.error("QA Error:", err);
-                qaStatus.innerText = "Error answering question.";
+                console.error("Q&A submission error:", err);
+                document.getElementById('interrupt-status-text').innerText = "Error getting answer. You can resume podcast below.";
             } finally {
                 isAnswering = false;
             }
@@ -287,9 +501,9 @@
 
         async function speakHostAnswer(speaker, text) {
             const apiKey = document.getElementById('api-key').value.trim();
-            const voiceId = voices[speaker];
+            const voiceId = voices["Host A"];
 
-            document.getElementById('current-speaker').innerText = `${speaker} (Answering Listener)`;
+            updateSpeakerBadge(speaker);
             document.getElementById('current-text').innerText = `"${text}"`;
 
             let played = false;
@@ -318,17 +532,19 @@
             }
         }
 
-        // Dedicated Stop & Resume Function
+        // Dedicated Stop Query & Resume Function
         function endQueryAndResume() {
             stopAllAudio();
             isAnswering = false;
             isInterrupted = false;
 
-            document.getElementById('qa-box').style.display = 'none';
-            document.getElementById('interrupt-btn').style.display = 'block';
-            document.getElementById('status-message').innerText = "▶️ Resuming podcast where Host A & Host B left off...";
-            
-            // Resume immediately from saved index!
+            const bar = document.getElementById('interrupt-bar');
+            bar.classList.remove('active');
+            document.getElementById('stop-resume-btn').style.display = 'none';
+            document.getElementById('question-input').value = "";
+            document.getElementById('interrupt-status-text').innerText = "▶️ Resuming podcast where Host A & Host B left off...";
+
+            // Resume automatically from exact line index where paused
             playScript(currentLineIndex);
         }
 
