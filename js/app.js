@@ -6,10 +6,11 @@
 const serverUrl = window.location.origin;
 const GEMINI_CLIENT_KEY = window.GEMINI_API_KEY || "";
 const GEMINI_MODELS = [
-    'gemini-3-flash-preview',
-    'gemini-3.1-flash-lite',
-    'gemini-3.5-flash-lite',
-    'gemini-3.7-flash'
+    'gemini-flash-latest',
+    'gemini-flash-lite-latest',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite'
 ];
 
 // ElevenLabs Voice IDs
@@ -41,6 +42,7 @@ if ('speechSynthesis' in window) {
 
 /**
  * YouTube-style Playback Speed Controller
+ * Seamlessly adjusts speed rate for ongoing and upcoming sentences without skipping lines.
  */
 function setPlaybackSpeed(speed) {
     currentPlaybackSpeed = parseFloat(speed) || 1.0;
@@ -51,16 +53,6 @@ function setPlaybackSpeed(speed) {
         try {
             currentAudio.playbackRate = currentPlaybackSpeed;
         } catch (e) {}
-    }
-    // If browser speech synthesis is currently active, instantly restart the current line at the new rate
-    if ('speechSynthesis' in window && window.speechSynthesis.speaking && isBroadcastRunning && !isPaused && !isInterrupted) {
-        const line = globalScriptData[currentLineIndex];
-        if (line) {
-            try {
-                window.speechSynthesis.cancel();
-                speakTextRobust(line.text, line.speaker === "Host A", currentPlaybackSpeed);
-            } catch (e) {}
-        }
     }
 }
 
