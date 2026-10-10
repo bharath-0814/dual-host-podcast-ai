@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/slides", "destination": "/slides.html" },
+    { "source": "/deck", "destination": "/slides.html" },
     { "source": "/generate-podcast", "destination": "/api/generate-podcast" },
     { "source": "/ask-host", "destination": "/api/ask-host" },
     { "source": "/tts", "destination": "/api/tts" }

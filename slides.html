@@ -142,17 +142,56 @@
             background: var(--primary);
             border-color: var(--primary);
         }
-        .btn-live-app {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        @media (max-width: 640px) {
+            body {
+                padding: 12px 8px;
+                justify-content: flex-start;
+                overflow-y: auto;
+            }
+            .slide-deck-container {
+                padding: 24px 16px;
+                min-height: auto;
+                border-radius: 18px;
+            }
+            .slide-title {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+            .slide-body {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            .slide-body ul {
+                gap: 10px;
+            }
+            .slide-body li {
+                padding-left: 22px;
+            }
+            .team-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-top: 14px;
+            }
+            .team-card {
+                padding: 12px;
+            }
+            .slide-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 20px;
+                padding-top: 14px;
+            }
+            .nav-btn {
+                flex: 1;
+                padding: 10px 14px;
+                text-align: center;
+            }
+            .btn-live-app {
+                width: 100%;
+                order: 3;
+                justify-content: center;
+                padding: 12px;
+            }
         }
     </style>
 </head>
@@ -170,7 +209,7 @@
 
         <div class="slide-footer">
             <button onclick="prevSlide()" class="nav-btn">◀ Previous</button>
-            <a href="index.html" class="btn-live-app">🎙️ Go to Live Demo (Localhost) ▶</a>
+            <a href="index.html" class="btn-live-app">🎙️ Launch Live Studio ▶</a>
             <button onclick="nextSlide()" class="nav-btn">Next ▶</button>
         </div>
     </div>
@@ -325,6 +364,18 @@
             if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
             if (e.key === 'ArrowLeft') prevSlide();
         });
+
+        // Touch Swipe Navigation for Mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 40) nextSlide();
+            if (touchEndX - touchStartX > 40) prevSlide();
+        }, false);
 
         renderSlide();
     </script>
