@@ -324,6 +324,7 @@
         .action-row {
             display: flex;
             gap: 12px;
+            width: 100%;
         }
         .btn-generate {
             flex: 1;
@@ -352,6 +353,52 @@
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+        }
+        .btn-control {
+            padding: 16px 22px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.25s;
+            border: none;
+            white-space: nowrap;
+        }
+        .btn-pause {
+            flex: 1;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1.5px solid rgba(245, 158, 11, 0.5);
+            color: #fbbf24;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+        }
+        .btn-pause:hover {
+            background: rgba(245, 158, 11, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
+        }
+        .btn-resume {
+            flex: 1;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+        .btn-resume:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-1px);
+        }
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+        .btn-stop:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
         }
 
         /* Subtitle Teleprompter Stage */
@@ -392,6 +439,34 @@
         .stage-counter {
             font-size: 12px;
             color: var(--text-subtle);
+        }
+        .stage-quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-stage-action {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-stage-action:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+        }
+        .btn-stage-stop:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #fca5a5;
         }
         .teleprompter-text {
             font-size: 17px;
@@ -438,14 +513,20 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            width: 100%;
+        }
+        .chat-field-wrapper {
             position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
         }
         .chat-field {
-            flex: 1;
+            width: 100%;
             background: rgba(15, 23, 42, 0.8);
             border: 1.5px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 13px 52px 13px 16px;
+            padding: 13px 48px 13px 16px;
             color: #fff;
             font-size: 14px;
             font-family: inherit;
@@ -458,12 +539,14 @@
         }
         .btn-send-icon {
             position: absolute;
-            right: 125px;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
             background: #ef4444;
             color: #fff;
             border: none;
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -473,7 +556,7 @@
         }
         .btn-send-icon:hover {
             background: #dc2626;
-            transform: scale(1.05);
+            transform: translateY(-50%) scale(1.06);
         }
         .btn-mic-icon {
             background: rgba(124, 58, 237, 0.2);
@@ -484,11 +567,12 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             white-space: nowrap;
             transition: all 0.2s;
+            height: 46px;
         }
         .btn-mic-icon:hover {
             background: rgba(124, 58, 237, 0.35);
@@ -547,7 +631,9 @@
         @media (max-width: 640px) {
             .main-card { padding: 24px 18px; }
             .hosts-showcase { grid-template-columns: 1fr; }
-            .btn-send-icon { right: 110px; }
+            .action-row { flex-direction: column; }
+            .chat-input-bar { flex-direction: column; align-items: stretch; }
+            .btn-mic-icon { width: 100%; justify-content: center; }
             .controls-toolbar { flex-direction: column; gap: 8px; align-items: flex-start; }
         }
     </style>
@@ -650,6 +736,15 @@
                     <button onclick="generatePodcast()" id="gen-btn" class="btn-generate">
                         <span>▶ Start Broadcast</span>
                     </button>
+                    <button onclick="pauseBroadcast()" id="pause-btn" class="btn-control btn-pause" style="display: none;" title="Pause for judge questions">
+                        <span>⏸️ Pause</span>
+                    </button>
+                    <button onclick="resumeBroadcast()" id="resume-btn" class="btn-control btn-resume" style="display: none;" title="Resume podcast broadcast">
+                        <span>▶️ Resume</span>
+                    </button>
+                    <button onclick="stopBroadcast()" id="stop-btn" class="btn-control btn-stop" style="display: none;" title="Stop presentation broadcast immediately">
+                        <span>⏹️ Stop Broadcast</span>
+                    </button>
                 </div>
             </div>
 
@@ -659,8 +754,14 @@
             <!-- Live Teleprompter / Subtitles Area -->
             <div id="stage-box" class="stage-box">
                 <div class="stage-header">
-                    <span id="current-badge" class="current-badge badge-a">Host A</span>
-                    <span id="stage-counter" class="stage-counter">Line 1 of 12</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="current-badge" class="current-badge badge-a">Host A</span>
+                        <span id="stage-counter" class="stage-counter">Line 1 of 12</span>
+                    </div>
+                    <div class="stage-quick-actions">
+                        <button onclick="toggleStagePause()" id="stage-pause-btn" class="btn-stage-action" title="Pause broadcast for judge questions">⏸️ Pause</button>
+                        <button onclick="stopBroadcast()" id="stage-stop-btn" class="btn-stage-action btn-stage-stop" title="Stop broadcast immediately">⏹️ Stop</button>
+                    </div>
                 </div>
                 <div id="current-text" class="teleprompter-text">"Welcome back to the show..."</div>
             </div>
@@ -673,8 +774,10 @@
                     </span>
                 </div>
                 <div class="chat-input-bar">
-                    <input type="text" id="question-input" class="chat-field" placeholder="Type a question to interrupt (e.g. What is AGI?)..." onfocus="pauseOnInputFocus()" onkeydown="handleInputKey(event)">
-                    <button onclick="submitQuestion()" class="btn-send-icon" title="Send question">➤</button>
+                    <div class="chat-field-wrapper">
+                        <input type="text" id="question-input" class="chat-field" placeholder="Type a question to interrupt (e.g. What is AGI?)..." onfocus="pauseOnInputFocus()" onkeydown="handleInputKey(event)">
+                        <button onclick="submitQuestion()" class="btn-send-icon" title="Send question">➤</button>
+                    </div>
                     <button onclick="toggleMicListen()" id="mic-btn" class="btn-mic-icon">🎙️ Speak (Mic)</button>
                 </div>
                 <button onclick="endQueryAndResume()" id="btn-resume" class="btn-resume-podcast">
@@ -700,11 +803,14 @@
         };
 
         let currentAudio = null;
+        let activeAudioResolver = null;
         let globalScriptData = [];
         let rawFullScript = "";
         let currentLineIndex = 0;
         let isInterrupted = false;
         let isAnswering = false;
+        let isBroadcastRunning = false;
+        let isPaused = false;
         let recognition = null;
         let isListeningMic = false;
         let currentPlaybackSpeed = 1.0;
@@ -719,9 +825,115 @@
             }
         }
 
+        function updateBroadcastControlsUI(state) {
+            const genBtn = document.getElementById('gen-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resumeBtn = document.getElementById('resume-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const stagePauseBtn = document.getElementById('stage-pause-btn');
+            const stageStopBtn = document.getElementById('stage-stop-btn');
+
+            if (state === 'playing') {
+                genBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-flex';
+                resumeBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-flex';
+                if (stagePauseBtn) stagePauseBtn.innerText = "⏸️ Pause";
+                if (stageStopBtn) stageStopBtn.style.display = 'inline-flex';
+            } else if (state === 'paused') {
+                genBtn.style.display = 'none';
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'inline-flex';
+                stopBtn.style.display = 'inline-flex';
+                if (stagePauseBtn) stagePauseBtn.innerText = "▶️ Resume";
+                if (stageStopBtn) stageStopBtn.style.display = 'inline-flex';
+            } else { // idle / stopped
+                genBtn.style.display = 'inline-flex';
+                genBtn.disabled = false;
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'none';
+                stopBtn.style.display = 'none';
+                if (stageStopBtn) stageStopBtn.style.display = 'none';
+            }
+        }
+
+        function pauseBroadcast() {
+            if (!isBroadcastRunning && !currentAudio && (!window.speechSynthesis || !window.speechSynthesis.speaking)) return;
+            isInterrupted = true;
+            isPaused = true;
+            stopAllAudio();
+            updateBroadcastControlsUI('paused');
+
+            const consoleEl = document.getElementById('interrupt-console');
+            consoleEl.style.display = 'block';
+            consoleEl.classList.add('active');
+            document.getElementById('console-status').innerHTML = "<span>⏸️</span> <b>Broadcast Paused for Judge Questions!</b> Ask question below or click Resume:";
+            document.getElementById('btn-resume').style.display = 'block';
+            
+            const statusMsg = document.getElementById('status-message');
+            statusMsg.innerText = `⏸️ Broadcast paused at Line ${currentLineIndex + 1} of ${globalScriptData.length}. Ready for questions.`;
+            statusMsg.style.color = "#fbbf24";
+        }
+
+        function resumeBroadcast() {
+            if (globalScriptData.length === 0) return;
+            stopAllAudio();
+            isInterrupted = false;
+            isPaused = false;
+            isAnswering = false;
+            isBroadcastRunning = true;
+            updateBroadcastControlsUI('playing');
+
+            const consoleEl = document.getElementById('interrupt-console');
+            consoleEl.classList.remove('active');
+            document.getElementById('btn-resume').style.display = 'none';
+            document.getElementById('console-status').innerHTML = "<span>▶️</span> Resuming podcast discussion...";
+            
+            const statusMsg = document.getElementById('status-message');
+            statusMsg.innerText = "✨ Broadcast Live! Listening to Host A & Host B.";
+            statusMsg.style.color = "#34d399";
+
+            playScript(currentLineIndex);
+        }
+
+        function stopBroadcast() {
+            stopAllAudio();
+            isBroadcastRunning = false;
+            isInterrupted = true;
+            isPaused = false;
+            isAnswering = false;
+            currentLineIndex = 0;
+
+            resetHostCards();
+            updateBroadcastControlsUI('idle');
+
+            const badge = document.getElementById('current-badge');
+            if (badge) {
+                badge.innerText = "⏹️ Stopped";
+                badge.className = "current-badge badge-ans";
+            }
+            document.getElementById('current-text').innerText = "Broadcast stopped by presenter. Ready to ask questions or start again.";
+            
+            const statusMsg = document.getElementById('status-message');
+            statusMsg.innerText = "⏹️ Broadcast stopped. You can ask questions to Host A below or click Start Broadcast.";
+            statusMsg.style.color = "#f87171";
+
+            document.getElementById('btn-resume').style.display = 'none';
+            document.getElementById('interrupt-console').classList.remove('active');
+        }
+
+        function toggleStagePause() {
+            if (isPaused) {
+                resumeBroadcast();
+            } else {
+                pauseBroadcast();
+            }
+        }
+
         async function generatePodcast() {
             stopAllAudio();
             isInterrupted = false;
+            isPaused = false;
             isAnswering = false;
             currentLineIndex = 0;
             globalScriptData = [];
@@ -757,7 +969,7 @@
                 console.error("Error:", error);
                 statusMsg.innerText = "Error: " + error.message;
                 statusMsg.style.color = "#f87171";
-                genBtn.disabled = false;
+                updateBroadcastControlsUI('idle');
             }
         }
 
@@ -788,9 +1000,11 @@
 
         async function playScript(startIndex) {
             const apiKey = document.getElementById('api-key').value.trim();
+            isBroadcastRunning = true;
+            updateBroadcastControlsUI('playing');
 
             for (let i = startIndex; i < globalScriptData.length; i++) {
-                if (isInterrupted) {
+                if (isInterrupted || isPaused || !isBroadcastRunning) {
                     currentLineIndex = i; // Save exact line index where paused
                     break;
                 }
@@ -822,28 +1036,38 @@
                             const blob = await ttsResponse.blob();
                             currentAudio = new Audio(URL.createObjectURL(blob));
                             currentAudio.playbackRate = currentPlaybackSpeed;
-                            await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
+                            await new Promise((resolve) => {
+                                activeAudioResolver = resolve;
+                                currentAudio.onended = () => { activeAudioResolver = null; resolve(); };
+                                currentAudio.onerror = () => { activeAudioResolver = null; resolve(); };
+                                currentAudio.play().catch(() => { activeAudioResolver = null; resolve(); });
+                            });
                             played = true;
                         }
                     } catch (e) {}
                 }
 
-                if (!played && !isInterrupted && 'speechSynthesis' in window) {
-                    await new Promise(r => {
+                if (!played && !isInterrupted && !isPaused && isBroadcastRunning && 'speechSynthesis' in window) {
+                    await new Promise((resolve) => {
+                        activeAudioResolver = resolve;
                         const u = new SpeechSynthesisUtterance(line.text);
                         const av = window.speechSynthesis.getVoices();
                         u.voice = (line.speaker === "Host A") ? (av.find(v => v.name.includes("Female") || v.name.includes("Zira")) || av[0]) : (av.find(v => v.name.includes("Male") || v.name.includes("David")) || av[1] || av[0]);
                         u.rate = currentPlaybackSpeed;
-                        u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
+                        u.onend = () => { activeAudioResolver = null; resolve(); };
+                        u.onerror = () => { activeAudioResolver = null; resolve(); };
+                        window.speechSynthesis.speak(u);
                     });
                 }
             }
 
-            if (!isInterrupted) {
+            if (!isInterrupted && !isPaused && isBroadcastRunning) {
+                isBroadcastRunning = false;
                 resetHostCards();
                 document.getElementById('current-badge').innerText = "📻 Ended";
+                document.getElementById('current-badge').className = "current-badge badge-ans";
                 document.getElementById('current-text').innerText = "Episode finished. Enter a new article to start another broadcast.";
-                document.getElementById('gen-btn').disabled = false;
+                updateBroadcastControlsUI('idle');
             }
         }
 
@@ -876,13 +1100,8 @@
 
         // Auto-pause when user focuses input
         function pauseOnInputFocus() {
-            if (!isInterrupted && !isAnswering && globalScriptData.length > 0) {
-                isInterrupted = true;
-                stopAllAudio();
-                const consoleEl = document.getElementById('interrupt-console');
-                consoleEl.classList.add('active');
-                document.getElementById('console-status').innerHTML = "<span>🚨</span> <b>Podcast Paused!</b> Type query and click ➤ (or Speak)";
-                document.getElementById('btn-resume').style.display = 'block';
+            if (isBroadcastRunning && !isInterrupted && !isAnswering && globalScriptData.length > 0) {
+                pauseBroadcast();
             }
         }
 
@@ -905,11 +1124,7 @@
                 return;
             }
 
-            isInterrupted = true;
-            stopAllAudio();
-            const consoleEl = document.getElementById('interrupt-console');
-            consoleEl.classList.add('active');
-            document.getElementById('btn-resume').style.display = 'block';
+            pauseBroadcast();
 
             recognition = new SpeechRecognition();
             recognition.continuous = false;
@@ -951,8 +1166,7 @@
             const q = document.getElementById('question-input').value.trim();
             if (!q || q.length < 2) return;
 
-            isInterrupted = true;
-            stopAllAudio();
+            pauseBroadcast();
             isAnswering = true;
 
             const consoleEl = document.getElementById('interrupt-console');
@@ -975,7 +1189,7 @@
                 });
 
                 const answerText = await response.text();
-                document.getElementById('console-status').innerHTML = "<span>🗣️</span> <b>Host A is answering your question live!</b>";
+                document.getElementById('console-status').innerHTML = "<span>🗣️</span> <b>Host A answered your question live!</b>";
                 
                 await speakHostAnswer("Host A (Answering)", answerText);
 
@@ -1006,45 +1220,64 @@
                         const blob = await res.blob();
                         currentAudio = new Audio(URL.createObjectURL(blob));
                         currentAudio.playbackRate = currentPlaybackSpeed;
-                        await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
+                        await new Promise((resolve) => {
+                            activeAudioResolver = resolve;
+                            currentAudio.onended = () => { activeAudioResolver = null; resolve(); };
+                            currentAudio.onerror = () => { activeAudioResolver = null; resolve(); };
+                            currentAudio.play().catch(() => { activeAudioResolver = null; resolve(); });
+                        });
                         played = true;
                     }
                 } catch (e) {}
             }
 
             if (!played && 'speechSynthesis' in window) {
-                await new Promise(r => {
+                await new Promise((resolve) => {
+                    activeAudioResolver = resolve;
                     const u = new SpeechSynthesisUtterance(text);
                     u.voice = window.speechSynthesis.getVoices().find(v => v.name.includes("Female") || v.name.includes("Zira")) || window.speechSynthesis.getVoices()[0];
                     u.rate = currentPlaybackSpeed;
-                    u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
+                    u.onend = () => { activeAudioResolver = null; resolve(); };
+                    u.onerror = () => { activeAudioResolver = null; resolve(); };
+                    window.speechSynthesis.speak(u);
                 });
             }
         }
 
         function endQueryAndResume() {
-            stopAllAudio();
-            isAnswering = false;
-            isInterrupted = false;
-
-            const consoleEl = document.getElementById('interrupt-console');
-            consoleEl.classList.remove('active');
-            document.getElementById('btn-resume').style.display = 'none';
-            document.getElementById('question-input').value = "";
-            document.getElementById('console-status').innerHTML = "<span>▶️</span> Resuming podcast discussion with Host A & Host B...";
-
-            playScript(currentLineIndex);
+            resumeBroadcast();
         }
 
         function stopAllAudio() {
             if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
+                try {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                } catch (e) {}
             }
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+                try {
+                    window.speechSynthesis.cancel();
+                } catch (e) {}
+            }
+            if (activeAudioResolver) {
+                activeAudioResolver();
+                activeAudioResolver = null;
             }
         }
+
+        // Spacebar hotkey to pause or resume playback during presentations
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isBroadcastRunning && !isPaused) {
+                    pauseBroadcast();
+                } else if (isPaused || globalScriptData.length > 0) {
+                    resumeBroadcast();
+                }
+            }
+        });
     </script>
 </body>
 </html>
