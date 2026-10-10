@@ -3,14 +3,16 @@
 ## Project Overview
 - **Problem Statement:** Problem Statement 4 - Interactive Voice Podcast Host & Newsletter Reader
 - **Deadline:** 1:30 PM today
-- **Status:** 🏆 **100% COMPLETE & PRESENTATION READY**
+- **Status:** 🏆 **100% COMPLETE & PRODUCTION VERIFIED**
 
 ---
 
-## 🌐 Official Project Links
-- **Vercel Production URL:** [https://dual-host-podcast-ai.vercel.app](https://dual-host-podcast-ai.vercel.app)
-- **GitHub Repository:** [https://github.com/bharath-0814/dual-host-podcast-ai](https://github.com/bharath-0814/dual-host-podcast-ai)
-- **Local Presentation Server:** `http://localhost:3000`
+## 🌐 Official Project URLs
+- **Vercel Production URL:** 👉 [https://dual-host-podcast-ai.vercel.app](https://dual-host-podcast-ai.vercel.app)
+- **Direct Vercel Deployment Link:** 👉 [https://dual-host-podcast-pwyz5wksc-bharathg0814-3022s-projects.vercel.app](https://dual-host-podcast-pwyz5wksc-bharathg0814-3022s-projects.vercel.app)
+- **Global HTTPS Cloudflare Tunnel:** 👉 [https://curve-gel-scanner-elected.trycloudflare.com](https://curve-gel-scanner-elected.trycloudflare.com) *(Verified 200 OK — instant backup if college Wi-Fi blocks vercel.app)*
+- **GitHub Repository:** 👉 [https://github.com/bharath-0814/dual-host-podcast-ai](https://github.com/bharath-0814/dual-host-podcast-ai)
+- **Local Dev Server:** `http://localhost:3000`
 
 ---
 

@@ -87,7 +87,7 @@ function executeGeminiRequest(modelName, promptText) {
 
 const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -143,21 +143,23 @@ const server = http.createServer(async (req, res) => {
                 const { question, currentSpeaker, currentLineText, fullScript } = JSON.parse(body);
                 console.log(`[Q&A] Listener asked: "${question}" (Paused at: ${currentSpeaker}: "${currentLineText}")`);
 
-                const prompt = `You are Host A in a live podcast with your co-host Host B.
-A live listener just interrupted the podcast to ask you a question.
+                const prompt = `You are Host A, co-host of an insightful podcast with Host B.
+A listener just paused the episode to ask you a question or clarify a topic.
 
-CONTEXT OF WHERE YOU WERE PAUSED:
-- Currently speaking: ${currentSpeaker}
-- Last spoken line: "${currentLineText}"
-
-FULL PODCAST SCRIPT DISCUSSING THE ARTICLE:
-${fullScript}
-
-LISTENER'S QUESTION:
+LISTENER'S QUERY:
 "${question}"
 
-YOUR TASK AS HOST A:
-Answer the listener's question in 2-3 engaging, conversational sentences. Specifically reference what you and Host B were just discussing in the script above. Address the listener directly and warmly. Stay strictly in character as Host A.`;
+CONTEXT OF WHERE YOU WERE PAUSED:
+- Speaking co-host: ${currentSpeaker}
+- Last line spoken: "${currentLineText}"
+- Podcast discussion overview:
+${(fullScript || '').substring(0, 2000)}
+
+STRICT RULES FOR HOST A:
+1. START DIRECTLY WITH THE ANSWER: Do NOT use conversational fluff, meta-commentary, or pleasantries (never say "Thanks for jumping in", "That's a great question", "You've hit on the perfect point", "Are you asking if...", or "Oh I love that"). Start immediately with the factual definition or clear explanation.
+2. ACCURATE DEFINITION: If the listener asks about a concept (like "What is AGI?", "What does that mean?", "It's still not the answer for what is AGI", or any terminology), state the authoritative, crystal-clear definition right away (e.g. Artificial General Intelligence, or AGI, refers to an AI system that can understand, learn, and perform any intellectual task that a human can do).
+3. CONNECT TO THE EPISODE: In your final sentence, smoothly tie that concept back to what you and Host B were just discussing.
+4. LENGTH: Exactly 2 to 3 concise, highly informative, natural sentences.`;
 
                 const answerText = await callGemini(prompt);
                 console.log("[Q&A] Host A Answer:", answerText);
@@ -180,3 +182,5 @@ Answer the listener's question in 2-3 engaging, conversational sentences. Specif
 server.listen(PORT, () => {
     console.log(`🚀 Automated Podcast Server running at http://localhost:${PORT}`);
 });
+
+module.exports = server;

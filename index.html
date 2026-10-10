@@ -135,7 +135,7 @@
             padding: 36px 32px;
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 24px;
         }
 
         /* Hero Text */
@@ -239,6 +239,52 @@
         .eq-bar:nth-child(3) { animation-delay: 0.4s; }
         .eq-bar:nth-child(4) { animation-delay: 0.1s; }
         @keyframes bounce { 0% { height: 4px; } 100% { height: 16px; } }
+
+        /* Toolbar Controls: Speed Selector (YouTube Style) */
+        .controls-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 10px 16px;
+        }
+        .toolbar-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .speed-pill-group {
+            display: flex;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px;
+            border-radius: 10px;
+        }
+        .btn-speed {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-speed:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .btn-speed.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
 
         /* Input Deck */
         .input-deck {
@@ -502,6 +548,7 @@
             .main-card { padding: 24px 18px; }
             .hosts-showcase { grid-template-columns: 1fr; }
             .btn-send-icon { right: 110px; }
+            .controls-toolbar { flex-direction: column; gap: 8px; align-items: flex-start; }
         }
     </style>
 </head>
@@ -575,7 +622,21 @@
                 </div>
             </div>
 
-            <!-- Input Controls -->
+            <!-- Controls Toolbar: YouTube-Style Playback Speed Selector -->
+            <div class="controls-toolbar">
+                <div class="toolbar-label">
+                    <span>⚡ Playback Speed:</span>
+                </div>
+                <div class="speed-pill-group">
+                    <button onclick="setPlaybackSpeed(0.75)" class="btn-speed" data-speed="0.75">0.75x</button>
+                    <button onclick="setPlaybackSpeed(1.0)" class="btn-speed active" data-speed="1.0">1.0x</button>
+                    <button onclick="setPlaybackSpeed(1.25)" class="btn-speed" data-speed="1.25">1.25x</button>
+                    <button onclick="setPlaybackSpeed(1.5)" class="btn-speed" data-speed="1.5">1.5x</button>
+                    <button onclick="setPlaybackSpeed(2.0)" class="btn-speed" data-speed="2.0">2.0x</button>
+                </div>
+            </div>
+
+            <!-- Input Deck -->
             <div class="input-deck">
                 <div class="url-box-wrapper">
                     <span class="input-icon">🔗</span>
@@ -646,6 +707,17 @@
         let isAnswering = false;
         let recognition = null;
         let isListeningMic = false;
+        let currentPlaybackSpeed = 1.0;
+
+        function setPlaybackSpeed(speed) {
+            currentPlaybackSpeed = speed;
+            document.querySelectorAll('.btn-speed').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.speed) === speed);
+            });
+            if (currentAudio) {
+                currentAudio.playbackRate = currentPlaybackSpeed;
+            }
+        }
 
         async function generatePodcast() {
             stopAllAudio();
@@ -749,6 +821,7 @@
                         if (ttsResponse.ok) {
                             const blob = await ttsResponse.blob();
                             currentAudio = new Audio(URL.createObjectURL(blob));
+                            currentAudio.playbackRate = currentPlaybackSpeed;
                             await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
                             played = true;
                         }
@@ -760,6 +833,7 @@
                         const u = new SpeechSynthesisUtterance(line.text);
                         const av = window.speechSynthesis.getVoices();
                         u.voice = (line.speaker === "Host A") ? (av.find(v => v.name.includes("Female") || v.name.includes("Zira")) || av[0]) : (av.find(v => v.name.includes("Male") || v.name.includes("David")) || av[1] || av[0]);
+                        u.rate = currentPlaybackSpeed;
                         u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
                     });
                 }
@@ -875,7 +949,7 @@
         async function submitQuestion() {
             if (isAnswering) return;
             const q = document.getElementById('question-input').value.trim();
-            if (!q) return;
+            if (!q || q.length < 2) return;
 
             isInterrupted = true;
             stopAllAudio();
@@ -884,7 +958,7 @@
             const consoleEl = document.getElementById('interrupt-console');
             consoleEl.classList.add('active');
             document.getElementById('btn-resume').style.display = 'block';
-            document.getElementById('console-status').innerHTML = "<span>🧠</span> Host A is thinking and synthesizing an answer...";
+            document.getElementById('console-status').innerHTML = "<span>🧠</span> Host A is preparing a direct, accurate answer...";
 
             const currentLine = globalScriptData[currentLineIndex] || { speaker: "Host A", text: "" };
 
@@ -931,6 +1005,7 @@
                     if (res.ok) {
                         const blob = await res.blob();
                         currentAudio = new Audio(URL.createObjectURL(blob));
+                        currentAudio.playbackRate = currentPlaybackSpeed;
                         await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
                         played = true;
                     }
@@ -941,6 +1016,7 @@
                 await new Promise(r => {
                     const u = new SpeechSynthesisUtterance(text);
                     u.voice = window.speechSynthesis.getVoices().find(v => v.name.includes("Female") || v.name.includes("Zira")) || window.speechSynthesis.getVoices()[0];
+                    u.rate = currentPlaybackSpeed;
                     u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
                 });
             }
