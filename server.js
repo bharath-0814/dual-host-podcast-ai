@@ -18,7 +18,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_LABS_API_KEY || process.env.XI_API_KEY || env.ELEVENLABS_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 
-// High-capacity models with separate fresh quotas (all returning 200 OK!)
+// High-capacity models with separate fresh quotas
 const GEMINI_MODELS = [
     'gemini-3-flash-preview',
     'gemini-3.1-flash-lite',
@@ -29,7 +29,9 @@ const GEMINI_MODELS = [
 function fetchUrl(targetUrl) {
     return new Promise((resolve, reject) => {
         const client = targetUrl.startsWith('https') ? https : http;
-        client.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
+        client.get(targetUrl, { 
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } 
+        }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => resolve(data));
@@ -68,22 +70,36 @@ function executeGeminiRequest(modelName, promptText) {
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
                 try {
-                    const json = JSON.parse(data);
-                    if (json.error) {
-                        return reject(new Error(json.error.message || "API Error"));
+                    const parsed = JSON.parse(data);
+                    if (parsed.error) {
+                        return reject(new Error(parsed.error.message));
                     }
-                    const text = json.candidates[0].content.parts[0].text;
-                    resolve(text);
+                    if (parsed.candidates && parsed.candidates[0].content.parts[0].text) {
+                        resolve(parsed.candidates[0].content.parts[0].text);
+                    } else {
+                        reject(new Error("Empty response from Gemini"));
+                    }
                 } catch (e) {
-                    reject(new Error("Parse Error: " + data));
+                    reject(e);
                 }
             });
         });
+
         req.on('error', reject);
         req.write(bodyData);
         req.end();
     });
 }
+
+const MIME_TYPES = {
+    '.html': 'text/html; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.svg': 'image/svg+xml'
+};
 
 const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -96,22 +112,107 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if ((req.method === 'GET' || req.method === 'HEAD') && (req.url === '/' || req.url === '/index.html' || req.url.startsWith('/?'))) {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        if (req.method === 'HEAD') { res.end(); return; }
-        try {
-            let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-            if (ELEVENLABS_API_KEY) {
-                html = html.replace(/id="api-key" value="[^"]*"/, `id="api-key" value="${ELEVENLABS_API_KEY}"`);
+    // Static file serving
+    if (req.method === 'GET' || req.method === 'HEAD') {
+        let reqPath = req.url.split('?')[0];
+        if (reqPath === '/') reqPath = '/index.html';
+
+        const filePath = path.join(__dirname, reqPath);
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            const ext = path.extname(filePath).toLowerCase();
+            const contentType = MIME_TYPES[ext] || 'text/plain';
+            res.writeHead(200, { 'Content-Type': contentType });
+            if (req.method === 'HEAD') { res.end(); return; }
+
+            if (ext === '.html') {
+                let html = fs.readFileSync(filePath, 'utf8');
+                if (ELEVENLABS_API_KEY) {
+                    html = html.replace(/id="api-key" value="[^"]*"/, `id="api-key" value="${ELEVENLABS_API_KEY}"`);
+                }
+                res.end(html);
+            } else {
+                fs.createReadStream(filePath).pipe(res);
             }
-            res.end(html);
-        } catch (e) {
-            fs.createReadStream(path.join(__dirname, 'index.html')).pipe(res);
+            return;
         }
+    }
+
+    // Generate podcast route
+    if (req.method === 'POST' && (req.url === '/generate-podcast' || req.url === '/api/generate-podcast')) {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { article_url } = JSON.parse(body);
+                console.log("[Podcast] Scraping URL:", article_url);
+
+                let rawHtml = await fetchUrl(article_url);
+                let cleanText = rawHtml.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
+                                       .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '')
+                                       .replace(/<[^>]+>/g, ' ')
+                                       .replace(/\s+/g, ' ')
+                                       .substring(0, 4000);
+
+                console.log("[Podcast] Generating Gemini dialogue script...");
+                const prompt = `You are a podcast scriptwriter. Rewrite the following article into an engaging, realistic dialogue script between Host A and Host B. Host A is enthusiastic and inquisitive, Host B is analytical and deep. Format each line starting with "Host A:" or "Host B:". Do not add stage directions. Article:\n\n${cleanText}`;
+                
+                const scriptText = await callGemini(prompt);
+                console.log("[Podcast] Script generation completed!");
+
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end(scriptText);
+            } catch (err) {
+                console.error("[Podcast Error]:", err.message);
+                res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end("Error: " + err.message);
+            }
+        });
         return;
     }
 
-    if (req.method === 'POST' && req.url === '/tts') {
+    // Ask Host Q&A route
+    if (req.method === 'POST' && (req.url === '/ask-host' || req.url === '/api/ask-host')) {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { question, currentSpeaker, currentLineText, fullScript } = JSON.parse(body);
+                console.log(`[Q&A] Listener asked: "${question}" (Paused at: ${currentSpeaker}: "${currentLineText}")`);
+
+                const prompt = `You are Host A, co-host of an insightful podcast with Host B.
+A listener just paused the episode to ask you a question or clarify a topic.
+
+LISTENER'S QUERY:
+"${question}"
+
+CONTEXT OF WHERE YOU WERE PAUSED:
+- Speaking co-host: ${currentSpeaker}
+- Last line spoken: "${currentLineText}"
+- Podcast discussion overview:
+${(fullScript || '').substring(0, 2000)}
+
+STRICT RULES FOR HOST A:
+1. START DIRECTLY WITH THE ANSWER: Do NOT use conversational fluff, meta-commentary, or pleasantries (never say "Thanks for jumping in", "That's a great question", "You've hit on the perfect point", "Are you asking if...", or "Oh I love that"). Start immediately with the factual definition or clear explanation.
+2. ACCURATE DEFINITION: If the listener asks about a concept (like "What is AGI?", "What does that mean?", "It's still not the answer for what is AGI", or any terminology), state the authoritative, crystal-clear definition right away (e.g. Artificial General Intelligence, or AGI, refers to an AI system that can understand, learn, and perform any intellectual task that a human can do).
+3. CONNECT TO THE EPISODE: In your final sentence, smoothly tie that concept back to what you and Host B were just discussing.
+4. LENGTH: Exactly 2 to 3 concise, highly informative, natural sentences.`;
+
+                const answerText = await callGemini(prompt);
+                console.log("[Q&A] Host A Answer:", answerText);
+
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end(answerText);
+            } catch (err) {
+                console.error("[Q&A Error]:", err.message);
+                res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end("Host A: That's a great question about what Host B and I were saying! Let's resume the episode to see how it unfolds.");
+            }
+        });
+        return;
+    }
+
+    // TTS ElevenLabs proxy route
+    if (req.method === 'POST' && (req.url === '/tts' || req.url === '/api/tts')) {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', async () => {
@@ -153,78 +254,6 @@ const server = http.createServer(async (req, res) => {
             } catch (err) {
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 res.end(err.message);
-            }
-        });
-        return;
-    }
-
-    if (req.method === 'POST' && req.url === '/generate-podcast') {
-        let body = '';
-        req.on('data', chunk => body += chunk);
-        req.on('end', async () => {
-            try {
-                const { article_url } = JSON.parse(body);
-                console.log("[Podcast] Scraping URL:", article_url);
-
-                let rawHtml = await fetchUrl(article_url);
-                let cleanText = rawHtml.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
-                                       .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '')
-                                       .replace(/<[^>]+>/g, ' ')
-                                       .replace(/\s+/g, ' ')
-                                       .substring(0, 4000);
-
-                console.log("[Podcast] Generating Gemini dialogue script...");
-                const prompt = `You are a podcast scriptwriter. Rewrite the following article into an engaging, realistic dialogue script between Host A and Host B. Host A is enthusiastic and inquisitive, Host B is analytical and deep. Format each line starting with "Host A:" or "Host B:". Do not add stage directions. Article:\n\n${cleanText}`;
-                
-                const scriptText = await callGemini(prompt);
-                console.log("[Podcast] Script generation completed!");
-
-                res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.end(scriptText);
-            } catch (err) {
-                console.error("[Podcast Error]:", err.message);
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end("Error: " + err.message);
-            }
-        });
-        return;
-    }
-
-    if (req.method === 'POST' && req.url === '/ask-host') {
-        let body = '';
-        req.on('data', chunk => body += chunk);
-        req.on('end', async () => {
-            try {
-                const { question, currentSpeaker, currentLineText, fullScript } = JSON.parse(body);
-                console.log(`[Q&A] Listener asked: "${question}" (Paused at: ${currentSpeaker}: "${currentLineText}")`);
-
-                const prompt = `You are Host A, co-host of an insightful podcast with Host B.
-A listener just paused the episode to ask you a question or clarify a topic.
-
-LISTENER'S QUERY:
-"${question}"
-
-CONTEXT OF WHERE YOU WERE PAUSED:
-- Speaking co-host: ${currentSpeaker}
-- Last line spoken: "${currentLineText}"
-- Podcast discussion overview:
-${(fullScript || '').substring(0, 2000)}
-
-STRICT RULES FOR HOST A:
-1. START DIRECTLY WITH THE ANSWER: Do NOT use conversational fluff, meta-commentary, or pleasantries (never say "Thanks for jumping in", "That's a great question", "You've hit on the perfect point", "Are you asking if...", or "Oh I love that"). Start immediately with the factual definition or clear explanation.
-2. ACCURATE DEFINITION: If the listener asks about a concept (like "What is AGI?", "What does that mean?", "It's still not the answer for what is AGI", or any terminology), state the authoritative, crystal-clear definition right away (e.g. Artificial General Intelligence, or AGI, refers to an AI system that can understand, learn, and perform any intellectual task that a human can do).
-3. CONNECT TO THE EPISODE: In your final sentence, smoothly tie that concept back to what you and Host B were just discussing.
-4. LENGTH: Exactly 2 to 3 concise, highly informative, natural sentences.`;
-
-                const answerText = await callGemini(prompt);
-                console.log("[Q&A] Host A Answer:", answerText);
-
-                res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.end(answerText);
-            } catch (err) {
-                console.error("[Q&A Error]:", err.message);
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end("Host A: That's a great question about what Host B and I were saying! Let's resume the episode to see how it unfolds.");
             }
         });
         return;
