@@ -96,8 +96,9 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+    if ((req.method === 'GET' || req.method === 'HEAD') && (req.url === '/' || req.url === '/index.html' || req.url.startsWith('/?'))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
+        if (req.method === 'HEAD') { res.end(); return; }
         fs.createReadStream(path.join(__dirname, 'index.html')).pipe(res);
         return;
     }
