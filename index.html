@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Audio Newsletter</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { margin-top: 0; color: #111827; }
+        .input-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        input[type="url"], input[type="text"] { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; }
+        button {
+            background-color: #2563eb; color: white; border: none; padding: 12px 20px;
+            border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color 0.2s;
+        }
+        button:hover { background-color: #1d4ed8; }
+        .interrupt-btn { background-color: #dc2626; display: none; margin-top: 15px; font-weight: bold; }
+        .interrupt-btn:hover { background-color: #b91c1c; }
+        .stop-resume-btn {
+            background-color: #059669; color: white; border: none; padding: 12px 20px;
+            border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%;
+        }
+        .stop-resume-btn:hover { background-color: #047857; }
+        
+        .qa-box {
+            margin-top: 20px; display: none; background: #fef2f2; border: 2px dashed #f87171;
+            padding: 20px; border-radius: 10px; text-align: left;
+        }
+        .now-playing {
+            margin-top: 20px; font-weight: bold; color: #059669; display: none;
+            padding: 15px; background: #d1fae5; border-radius: 8px; text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎙️ Dual-Host Podcast AI Platform</h1>
+        <p>Paste any article link. Listen to Host A & Host B discuss it, or interrupt to ask questions anytime!</p>
+        
+        <div class="input-group">
+            <input type="url" id="article-url" placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence" value="https://en.wikipedia.org/wiki/Artificial_intelligence" required>
+            <input type="text" id="api-key" placeholder="ElevenLabs API Key (sk_...)" value="sk_5a308e5383029f6f3e95f88da7bbf0c3e18d55102a91c6a1">
+            <button onclick="generatePodcast()" id="gen-btn">Generate & Play Podcast</button>
+            <button onclick="triggerInterrupt()" id="interrupt-btn" class="interrupt-btn">🚨 INTERRUPT PODCAST & ASK QUESTION</button>
+        </div>
+
+        <div id="status-message" style="margin-top: 15px; font-weight: bold; color: #2563eb;"></div>
+
+        <!-- Integrated Live Question Panel -->
+        <div id="qa-box" class="qa-box">
+            <h3 style="margin-top: 0; color: #991b1b;">🚨 Podcast Paused by Listener</h3>
+            <p style="font-size: 14px; color: #7f1d1d;">Ask Host A a question (using Mic or Text) about what was just discussed:</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="question-input" placeholder="e.g. Can you explain that in simpler terms?" style="flex: 1;">
+                <button onclick="startMicListen()" style="background-color: #7c3aed;">🎙️ Speak (Mic)</button>
+                <button onclick="submitQuestion()" style="background-color: #dc2626;">Ask Host A</button>
+            </div>
+            <div id="qa-status" style="margin-top: 10px; font-weight: bold; color: #7c3aed; font-size: 14px;"></div>
+            
+            <!-- Stop & Resume Button requested by User -->
+            <button onclick="endQueryAndResume()" class="stop-resume-btn">🛑 Got My Answer! Stop Host A & Resume Podcast ▶️</button>
+        </div>
+        
+        <div id="now-playing" class="now-playing">
+            <div style="font-size: 16px; margin-bottom: 5px;">▶️ Speaking: <span id="current-speaker" style="color: #2563eb;"></span></div>
+            <div id="current-text" style="font-weight: normal; font-size: 14px; color: #374151; font-style: italic;"></div>
+        </div>
+    </div>
+
+    <script>
+        const serverUrl = window.location.origin;
+        const voices = {
+            "Host A": "21m00Tcm4TlvDq8ikWAM", // Rachel (Female)
+            "Host B": "29vD33N1CtxCmqQRPOHJ"  // Drew (Male)
+        };
+
+        let currentAudio = null;
+        let globalScriptData = [];
+        let rawFullScript = "";
+        let currentLineIndex = 0;
+        let isInterrupted = false;
+        let isAnswering = false;
+
+        async function generatePodcast() {
+            stopAllAudio();
+            isInterrupted = false;
+            isAnswering = false;
+            currentLineIndex = 0;
+            globalScriptData = [];
+            
+            const url = document.getElementById('article-url').value;
+            const statusMsg = document.getElementById('status-message');
+            document.getElementById('gen-btn').disabled = true;
+
+            statusMsg.style.color = "#2563eb";
+            statusMsg.innerText = "Scraping article & Generating script via Gemini...";
+            
+            try {
+                const response = await fetch(`${serverUrl}/generate-podcast`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ article_url: url })
+                });
+                
+                rawFullScript = await response.text();
+                globalScriptData = parseTextScript(rawFullScript);
+
+                if (globalScriptData.length === 0) throw new Error("No script lines found.");
+
+                statusMsg.innerText = "✅ Script ready! Host A & Host B starting live broadcast...";
+                statusMsg.style.color = "green";
+                document.getElementById('interrupt-btn').style.display = 'block';
+                document.getElementById('now-playing').style.display = 'block';
+
+                playScript(0);
+
+            } catch (error) {
+                console.error("Error:", error);
+                statusMsg.innerText = "Error: " + error.message;
+                statusMsg.style.color = "red";
+                document.getElementById('gen-btn').disabled = false;
+            }
+        }
+
+        function parseTextScript(rawText) {
+            const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+            const result = [];
+            let currentHost = "Host A";
+
+            for (let line of lines) {
+                if (line.startsWith('{') || line.startsWith('}')) continue;
+
+                const lower = line.toLowerCase();
+                if (lower.includes("host b")) currentHost = "Host B";
+                else if (lower.includes("host a")) currentHost = "Host A";
+
+                let dialogue = line.replace(/\*\*Host [AB]:?\*\*/gi, '')
+                                   .replace(/Host [AB]:?/gi, '')
+                                   .replace(/\*/g, '')
+                                   .trim();
+
+                if (dialogue.length > 3) {
+                    result.push({ speaker: currentHost, text: dialogue });
+                    currentHost = (currentHost === "Host A") ? "Host B" : "Host A";
+                }
+            }
+            return result;
+        }
+
+        async function playScript(startIndex) {
+            const apiKey = document.getElementById('api-key').value.trim();
+
+            for (let i = startIndex; i < globalScriptData.length; i++) {
+                if (isInterrupted) {
+                    currentLineIndex = i;
+                    break;
+                }
+
+                currentLineIndex = i;
+                const line = globalScriptData[i];
+                const voiceId = voices[line.speaker] || voices["Host A"];
+                
+                document.getElementById('current-speaker').innerText = line.speaker;
+                document.getElementById('current-text').innerText = `"${line.text}"`;
+
+                let played = false;
+                if (apiKey) {
+                    try {
+                        const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                            method: 'POST',
+                            headers: {
+                                'xi-api-key': apiKey,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                text: line.text,
+                                model_id: "eleven_monolingual_v1",
+                                voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+                            })
+                        });
+
+                        if (ttsResponse.ok) {
+                            const blob = await ttsResponse.blob();
+                            currentAudio = new Audio(URL.createObjectURL(blob));
+                            await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
+                            played = true;
+                        }
+                    } catch (e) {}
+                }
+
+                if (!played && !isInterrupted && 'speechSynthesis' in window) {
+                    await new Promise(r => {
+                        const u = new SpeechSynthesisUtterance(line.text);
+                        const av = window.speechSynthesis.getVoices();
+                        u.voice = (line.speaker === "Host A") ? (av.find(v => v.name.includes("Female") || v.name.includes("Zira")) || av[0]) : (av.find(v => v.name.includes("Male") || v.name.includes("David")) || av[1] || av[0]);
+                        u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
+                    });
+                }
+            }
+
+            if (!isInterrupted) {
+                document.getElementById('now-playing').innerText = "📻 Podcast Episode Finished.";
+                document.getElementById('interrupt-btn').style.display = 'none';
+                document.getElementById('gen-btn').disabled = false;
+            }
+        }
+
+        function triggerInterrupt() {
+            isInterrupted = true;
+            stopAllAudio();
+
+            document.getElementById('interrupt-btn').style.display = 'none';
+            document.getElementById('qa-box').style.display = 'block';
+            document.getElementById('status-message').innerText = "🚨 Podcast Paused! Host A is ready for your question.";
+        }
+
+        function startMicListen() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech recognition not supported in this browser. Please type your question!");
+                return;
+            }
+            const rec = new SpeechRecognition();
+            document.getElementById('qa-status').innerText = "🎙️ Listening to your mic... Speak now!";
+            rec.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                document.getElementById('question-input').value = text;
+                document.getElementById('qa-status').innerText = `Recognized: "${text}"`;
+                submitQuestion();
+            };
+            rec.start();
+        }
+
+        async function submitQuestion() {
+            if (isAnswering) return;
+            const q = document.getElementById('question-input').value.trim();
+            if (!q) return;
+
+            isAnswering = true;
+            const qaStatus = document.getElementById('qa-status');
+            qaStatus.innerText = "🤔 Host A is thinking about your question...";
+
+            const currentLine = globalScriptData[currentLineIndex] || { speaker: "Host A", text: "" };
+
+            try {
+                const response = await fetch(`${serverUrl}/ask-host`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: q,
+                        currentSpeaker: currentLine.speaker,
+                        currentLineText: currentLine.text,
+                        fullScript: rawFullScript
+                    })
+                });
+
+                const answerText = await response.text();
+                qaStatus.innerText = "🗣️ Host A is answering your question out loud!";
+                
+                await speakHostAnswer("Host A", answerText);
+
+            } catch (err) {
+                console.error("QA Error:", err);
+                qaStatus.innerText = "Error answering question.";
+            } finally {
+                isAnswering = false;
+            }
+        }
+
+        async function speakHostAnswer(speaker, text) {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const voiceId = voices[speaker];
+
+            document.getElementById('current-speaker').innerText = `${speaker} (Answering Listener)`;
+            document.getElementById('current-text').innerText = `"${text}"`;
+
+            let played = false;
+            if (apiKey) {
+                try {
+                    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                        method: 'POST',
+                        headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text, model_id: "eleven_monolingual_v1", voice_settings: { stability: 0.5, similarity_boost: 0.5 } })
+                    });
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        currentAudio = new Audio(URL.createObjectURL(blob));
+                        await new Promise(r => { currentAudio.onended = r; currentAudio.onerror = r; currentAudio.play(); });
+                        played = true;
+                    }
+                } catch (e) {}
+            }
+
+            if (!played && 'speechSynthesis' in window) {
+                await new Promise(r => {
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.voice = window.speechSynthesis.getVoices().find(v => v.name.includes("Female") || v.name.includes("Zira")) || window.speechSynthesis.getVoices()[0];
+                    u.onend = r; u.onerror = r; window.speechSynthesis.speak(u);
+                });
+            }
+        }
+
+        // Dedicated Stop & Resume Function
+        function endQueryAndResume() {
+            stopAllAudio();
+            isAnswering = false;
+            isInterrupted = false;
+
+            document.getElementById('qa-box').style.display = 'none';
+            document.getElementById('interrupt-btn').style.display = 'block';
+            document.getElementById('status-message').innerText = "▶️ Resuming podcast where Host A & Host B left off...";
+            
+            // Resume immediately from saved index!
+            playScript(currentLineIndex);
+        }
+
+        function stopAllAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        }
+    </script>
+</body>
+</html>

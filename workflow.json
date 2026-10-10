@@ -1,0 +1,163 @@
+{
+  "name": "Interactive Podcast Generator (Complete)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-podcast",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "1",
+      "name": "Webhook (Receive URL)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.body.article_url}}",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Scrape Article",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "p, h1, h2, h3",
+              "returnValue": "text",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.htmlExtract",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "model": "models/gemini-3-flash-preview",
+        "messages": {
+          "values": [
+            {
+              "prompt": "=You are a podcast scriptwriter. Rewrite the following article into an engaging 2-person podcast dialogue script between Host A and Host B. Article text:\n\n{{ $json.content.join(' ') }}"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Message a model",
+      "type": "n8n-nodes-google-gemini.googleGemini",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://api.elevenlabs.io/v1/convai/agents/agent_9801m4hbn7x9f6prrznefq22v7at",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "sk_5a308e5383029f6f3e95f88da7bbf0c3e18d55102a91c6a1"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"conversation_config\": {\n    \"agent\": {\n      \"prompt\": {\n        \"prompt\": \"{{ $('Message a model').item.json.content.parts[0].text }}\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "5",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Message a model').item.json.content.parts[0].text }}",
+        "options": {}
+      },
+      "id": "6",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (Receive URL)": {
+      "main": [
+        [
+          {
+            "node": "Scrape Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Article": {
+      "main": [
+        [
+          {
+            "node": "Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
