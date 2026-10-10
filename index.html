@@ -1017,7 +1017,27 @@
                 document.getElementById('current-text').innerText = `"${line.text}"`;
 
                 let played = false;
-                if (apiKey) {
+                try {
+                    const ttsResponse = await fetch(`${serverUrl}/tts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: line.text, voiceId })
+                    });
+                    if (ttsResponse.ok) {
+                        const blob = await ttsResponse.blob();
+                        currentAudio = new Audio(URL.createObjectURL(blob));
+                        currentAudio.playbackRate = currentPlaybackSpeed;
+                        await new Promise((resolve) => {
+                            activeAudioResolver = resolve;
+                            currentAudio.onended = () => { activeAudioResolver = null; resolve(); };
+                            currentAudio.onerror = () => { activeAudioResolver = null; resolve(); };
+                            currentAudio.play().catch(() => { activeAudioResolver = null; resolve(); });
+                        });
+                        played = true;
+                    }
+                } catch (e) {}
+
+                if (!played && apiKey) {
                     try {
                         const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
                             method: 'POST',
@@ -1209,7 +1229,27 @@
             document.getElementById('current-text').innerText = `"${text}"`;
 
             let played = false;
-            if (apiKey) {
+            try {
+                const res = await fetch(`${serverUrl}/tts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, voiceId })
+                });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    currentAudio = new Audio(URL.createObjectURL(blob));
+                    currentAudio.playbackRate = currentPlaybackSpeed;
+                    await new Promise((resolve) => {
+                        activeAudioResolver = resolve;
+                        currentAudio.onended = () => { activeAudioResolver = null; resolve(); };
+                        currentAudio.onerror = () => { activeAudioResolver = null; resolve(); };
+                        currentAudio.play().catch(() => { activeAudioResolver = null; resolve(); });
+                    });
+                    played = true;
+                }
+            } catch (e) {}
+
+            if (!played && apiKey) {
                 try {
                     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
                         method: 'POST',

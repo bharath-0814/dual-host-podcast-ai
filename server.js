@@ -14,9 +14,9 @@ if (fs.existsSync(envPath)) {
     });
 }
 
-const GEMINI_API_KEY = env.GEMINI_API_KEY || '';
-const ELEVENLABS_API_KEY = env.ELEVENLABS_API_KEY || '';
-const PORT = 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_KEY || env.GEMINI_API_KEY || '';
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_LABS_API_KEY || process.env.XI_API_KEY || env.ELEVENLABS_API_KEY || '';
+const PORT = process.env.PORT || 3000;
 
 // High-capacity models with separate fresh quotas (all returning 200 OK!)
 const GEMINI_MODELS = [
@@ -97,9 +97,64 @@ const server = http.createServer(async (req, res) => {
     }
 
     if ((req.method === 'GET' || req.method === 'HEAD') && (req.url === '/' || req.url === '/index.html' || req.url.startsWith('/?'))) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         if (req.method === 'HEAD') { res.end(); return; }
-        fs.createReadStream(path.join(__dirname, 'index.html')).pipe(res);
+        try {
+            let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+            if (ELEVENLABS_API_KEY) {
+                html = html.replace(/id="api-key" value="[^"]*"/, `id="api-key" value="${ELEVENLABS_API_KEY}"`);
+            }
+            res.end(html);
+        } catch (e) {
+            fs.createReadStream(path.join(__dirname, 'index.html')).pipe(res);
+        }
+        return;
+    }
+
+    if (req.method === 'POST' && req.url === '/tts') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { text, voiceId } = JSON.parse(body);
+                const activeKey = ELEVENLABS_API_KEY || '';
+                if (!activeKey) {
+                    res.writeHead(400, { 'Content-Type': 'text/plain' });
+                    res.end("No ElevenLabs API key found");
+                    return;
+                }
+
+                const postData = JSON.stringify({
+                    text,
+                    model_id: "eleven_monolingual_v1",
+                    voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+                });
+
+                const ttsReq = https.request(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'xi-api-key': activeKey,
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postData)
+                    }
+                }, (ttsRes) => {
+                    res.writeHead(ttsRes.statusCode, { 'Content-Type': 'audio/mpeg' });
+                    ttsRes.pipe(res);
+                });
+
+                ttsReq.on('error', (err) => {
+                    console.error("[TTS Error]:", err.message);
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end(err.message);
+                });
+
+                ttsReq.write(postData);
+                ttsReq.end();
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end(err.message);
+            }
+        });
         return;
     }
 
