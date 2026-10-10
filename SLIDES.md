@@ -1,45 +1,49 @@
-# 🎙️ PodAI Live — Hackathon 2026 Presentation Deck
+# 🎙️ PodAI Live — Hackathon 2026 Official Presentation Deck (10 Slides)
+
+> **AI Summit 2026 Hackathon · LHC Room 003**  
+> **Problem Statement 4: Audio Newsletter Host & Live Conversational Voice Experience**
 
 ---
 
 ## Slide 1: Title & Team Credentials (Mandatory Slide 1)
 * **Project Title:** PodAI Live — Interactive Dual-Host Podcast & Voice Experience
-* **Problem Statement:** Problem 4 — Audio Newsletter Host & Live Conversational Voice
-* **Team Leader:** Bharath G
+* **Problem Statement:** Problem 4 — Audio Newsletter Host & Live Conversational Voice Experience
 * **Team Name:** PodAI Innovators
-* **Event:** AI Summit 2026 Hackathon (LHC Room 003)
-* **Repository:** [https://github.com/bharath-0814/dual-host-podcast-ai](https://github.com/bharath-0814/dual-host-podcast-ai)
+* **Team Members & Assigned Roles:**
+  * 👑 **Gummadi Bharath Kumar Wesly** — *Team Lead · Full-Stack & Voice Architecture Lead*
+  * 🧠 **Krrish Kumar** — *AI / LLM Dialogue & Multi-Agent Prompt Engineering Lead*
+  * 🎨 **Swarnim Sulekh** — *Frontend UX & Real-Time Audio Systems Lead*
+* **Live Presentation Venue:** LHC Room 003 (Presented Live on Localhost)
+* **GitHub Repository:** [https://github.com/bharath-0814/dual-host-podcast-ai](https://github.com/bharath-0814/dual-host-podcast-ai)
 
 ---
 
 ## Slide 2: The Problem
-* **Passive Audio is Stale:** Traditional podcasts and text-to-speech audio newsletters are static, 1-way monologues with zero listener interaction.
-* **Information Density Barrier:** Complex tech and business articles are overwhelming to read, yet standard audio players don't let listeners ask clarifying questions on the fly.
-* **The Need:** An intelligent, dual-host conversational podcast that can be interrupted live via voice or text, providing instant, accurate answers before resuming discussion.
+* **Passive Audio is Stale:** Standard text-to-speech audio newsletters are static, 1-way robotic monologues with zero listener interaction.
+* **Information Overload:** Complex technical papers and newsletters are hard to absorb when listeners cannot ask clarifying questions on confusing concepts.
+* **The Missing Link:** A natural dual-host format where listeners can pause, interrupt in real time using voice or text, get authoritative answers, and resume seamlessly.
 
 ---
 
 ## Slide 3: The Solution — PodAI Live
 * **Autonomous Dual-Host Dynamic:** Converts any article/newsletter URL into a realistic, natural back-and-forth dialogue between two specialized AI hosts:
-  * **Host A (Rachel):** Inquisitive, conversational lead who engages the listener and answers queries.
-  * **Host B (Drew):** Analytical, deep-dive co-host who breaks down technical depth.
+  * **Host A (Rachel):** Inquisitive, engaging lead host who leads discussion and handles live listener Q&A.
+  * **Host B (Drew):** Analytical, deep-dive co-host who unpacks technical depth and architecture.
 * **Real-Time Voice Interruption:** Listeners can pause the episode anytime by speaking into their microphone or typing in the chat.
-* **Context-Aware Live Q&A:** Host A answers the query with zero conversational fluff, defining the concept directly, then smoothly connects it back to the ongoing podcast.
+* **Context-Aware Live Q&A:** Host A defines the concept directly without fluff, connects it back to Host B, and smoothly resumes the episode.
 
 ---
 
 ## Slide 4: System Architecture
 * **Frontend:** High-performance dark glassmorphic UI, responsive control matrix, animated sound equalizers, and subtitle teleprompter.
-* **LLM Engine:** Google Gemini (with automated failover across `gemini-3-flash-preview`, `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-3.7-flash`).
-* **Speech Synthesis:** Multi-tier voice architecture:
-  * Tier 1: ElevenLabs Conversational Voice API (Rachel & Drew personas).
-  * Tier 2: Resilient Web Speech API with pitch-modulated dual voices.
-* **Speech Recognition:** Web Speech API for instant voice interruption.
+* **LLM Engine:** Google Gemini with automated quota-failover across 4 flash models for zero-delay script generation.
+* **Speech Synthesis:** Multi-tier voice architecture (ElevenLabs Conversational Voice API + Resilient Web Speech API with pitch modulation).
+* **Speech Recognition:** Web Speech Recognition API (`webkitSpeechRecognition`) for instant listener speech-to-text.
 
 ---
 
 ## Slide 5: Autonomous Dialogue Generation
-* **Instant URL Ingestion:** Parses online newsletters, Wikipedia, and technical blogs via fast summarization and scraping.
+* **Instant URL Ingestion:** Parses online newsletters, Wikipedia, and blogs via fast 150ms REST summarization.
 * **Scriptwriting Prompt Engine:** Automatically formats natural conversational turns, bantering, analogies, and questions between Host A and Host B without robotic repetition.
 * **Zero Cold-Start Latency:** Generates realistic 8-12 turn scripts in under 2 seconds.
 
@@ -61,7 +65,7 @@
 ---
 
 ## Slide 8: Technical Innovations & Resilience
-* **Dual-Tier Offline/Online Fallback:** Works 100% reliably even in low-connectivity presentation environments by seamlessly switching between cloud serverless and client-side execution.
+* **Zero-Latency Localhost Execution:** Guaranteed 100% reliability in lecture halls with zero reliance on cloud cold starts or external firewalls.
 * **Chromium Speech Synthesis Keepalive:** Custom watchdog timer preventing browser speech engines from freezing on long lines.
 * **Non-Blocking Promise Cancellation:** Guarantees instantaneous audio stopping upon user interruption.
 
@@ -76,7 +80,7 @@
 
 ## Slide 10: Conclusion & Live Demonstration
 * **Summary:** PodAI redefines audio newsletters from passive listening into an active, two-way conversational journey.
-* **Production Status:** Fully functional, open-source, and deployed.
+* **Presentation Mode:** Presented Live on `http://localhost:3000` in LHC Room 003.
 * **Public GitHub:** [https://github.com/bharath-0814/dual-host-podcast-ai](https://github.com/bharath-0814/dual-host-podcast-ai)
-* **Live App:** [https://dual-host-podcast-ai.vercel.app](https://dual-host-podcast-ai.vercel.app)
-* *Thank you! We are ready for live demonstration and Q&A.*
+* **Team:** Gummadi Bharath Kumar Wesly · Krrish Kumar · Swarnim Sulekh
+* *Thank you! We are ready for live demonstration and judges' Q&A.*

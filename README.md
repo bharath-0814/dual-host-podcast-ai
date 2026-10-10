@@ -7,14 +7,35 @@
 [![ElevenLabs](https://img.shields.io/badge/Voice-ElevenLabs%20Conversational%20TTS-orange)](https://elevenlabs.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+
 ---
 
-## 🌟 Live Demo Deployments
+## 🏆 Hackathon 2026 Submission Credentials
 
-| Platform | URL | Status |
-| :--- | :--- | :--- |
-| **Official Vercel Production** | [dual-host-podcast-ai.vercel.app](https://dual-host-podcast-ai.vercel.app) | 🟢 Live |
-| **Instant HTTPS Tunnel (Unblocked)** | [sue-reading-documentation-wires.trycloudflare.com](https://sue-reading-documentation-wires.trycloudflare.com) | 🟢 200 OK |
+* **Project Title:** PodAI Live — Interactive Dual-Host Podcast & Voice Studio
+* **Problem Statement:** Problem 4 — Audio Newsletter Host & Live Conversational Voice Experience
+* **Team Name:** PodAI Innovators
+* **Team Members & Assigned Roles:**
+  * 👑 **Gummadi Bharath Kumar Wesly** — *Team Leader · Full-Stack Voice & System Architecture Lead*
+  * 🧠 **Krrish Kumar** — *AI / LLM Multi-Agent Dialogue & Prompt Engineering Lead*
+  * 🎨 **Swarnim Sulekh** — *Frontend UX & Real-Time Audio Systems Lead*
+* **Presentation Venue:** LHC Room 003 (Presentations begin at 3:30 PM)
+* **Presentation Deck:** [Interactive Slide Deck (10 Slides)](slides.html) | [Markdown Slides (SLIDES.md)](SLIDES.md)
+
+---
+
+## 🚨 Hackathon Rule #4 Compliance & Live Presentation Note
+
+> **Hackathon Submission Rule #4:** *"A live, deployed product is preferred but not mandatory."*
+
+**We are officially presenting our live product on `http://localhost:3000`** during the judging round in LHC Room 003. Running the demonstration locally on `localhost:3000` guarantees 100% resilience against lecture hall Wi-Fi drops, proxy restrictions, or external API cold-start delays. Both the presentation deck (`http://localhost:3000/slides.html`) and the live interactive voice studio (`http://localhost:3000`) run concurrently and seamlessly.
+
+| Environment | URL | Status | Note |
+| :--- | :--- | :--- | :--- |
+| **Official Hackathon Demo (Primary)** | [http://localhost:3000](http://localhost:3000) | 🟢 Always Online | Zero-latency LHC Room 003 live demo |
+| **Interactive 10-Slide Deck** | [http://localhost:3000/slides.html](http://localhost:3000/slides.html) | 🟢 Live | Keyboard-navigated presentation deck |
+| **Vercel Cloud Deployment** | [dual-host-podcast-ai.vercel.app](https://dual-host-podcast-ai.vercel.app) | 🟢 Deployed | Public edge deployment |
+| **Live Cloudflare Tunnel** | [boring-gen-migration-tomatoes.trycloudflare.com](https://boring-gen-migration-tomatoes.trycloudflare.com) | 🟢 Active | HTTPS tunnel backup |
 
 ---
 

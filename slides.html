@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PodAI Live — Presentation Deck (10 Slides)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(18, 24, 38, 0.9);
+            --primary: #6366f1;
+            --host-a: #38bdf8;
+            --host-b: #fbbf24;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            overflow: hidden;
+        }
+        .slide-deck-container {
+            width: 100%;
+            max-width: 900px;
+            min-height: 560px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .slide-num {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(99, 102, 241, 0.15);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .slide-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 18px;
+            line-height: 1.3;
+        }
+        .slide-body {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-muted);
+            flex: 1;
+        }
+        .slide-body strong {
+            color: #fff;
+        }
+        .slide-body ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .slide-body li {
+            position: relative;
+            padding-left: 28px;
+        }
+        .slide-body li::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--host-a);
+            font-size: 16px;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .team-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .team-card h4 {
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .team-card p {
+            color: var(--host-a);
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .btn-live-app {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-deck-container">
+        <div class="slide-header">
+            <span id="slide-tracker" class="slide-num">Slide 1 of 10</span>
+            <span style="font-size: 13px; color: var(--text-muted);">AI Summit 2026 · LHC Room 003</span>
+        </div>
+
+        <div id="slide-content">
+            <!-- Dynamic Slide Content Inserted Here -->
+        </div>
+
+        <div class="slide-footer">
+            <button onclick="prevSlide()" class="nav-btn">◀ Previous</button>
+            <a href="index.html" class="btn-live-app">🎙️ Go to Live Demo (Localhost) ▶</a>
+            <button onclick="nextSlide()" class="nav-btn">Next ▶</button>
+        </div>
+    </div>
+
+    <script>
+        const slides = [
+            {
+                title: "🎙️ PodAI Live — Interactive Dual-Host Voice Experience",
+                content: `
+                    <ul>
+                        <li><strong>Problem Statement:</strong> Problem 4 — Audio Newsletter Host & Live Conversational Voice</li>
+                        <li><strong>Team Name:</strong> PodAI Innovators</li>
+                        <li><strong>Live Presentation Venue:</strong> LHC Room 003 (Localhost Demo)</li>
+                    </ul>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <h4>Gummadi Bharath Kumar Wesly</h4>
+                            <p>Team Lead · Full-Stack & Voice Architecture</p>
+                        </div>
+                        <div class="team-card">
+                            <h4>Krrish Kumar</h4>
+                            <p>AI / LLM Dialogue & Prompt Engineering Lead</p>
+                        </div>
+                        <div class="team-card">
+                            <h4>Swarnim Sulekh</h4>
+                            <p>Frontend UX & Real-Time Audio Systems Lead</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "❗ The Problem: Audio Newsletters are Dead & Passive",
+                content: `
+                    <ul>
+                        <li><strong>Static 1-Way Monologues:</strong> Traditional text-to-speech readers sound like automated robocalls with zero dynamism.</li>
+                        <li><strong>Information Overload:</strong> Long newsletters and technical papers are difficult to digest when listeners cannot ask questions.</li>
+                        <li><strong>The Missing Piece:</strong> A natural dual-host format where listeners can pause, interrupt in real time using their voice, and get factual answers immediately.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "💡 The Solution: PodAI Live",
+                content: `
+                    <ul>
+                        <li><strong>Autonomous Dual-Host Banter:</strong> Host A (Rachel - Inquisitive Lead) & Host B (Drew - Analytical Co-Host) co-host dynamic episodes.</li>
+                        <li><strong>Live Voice & Chat Interruption:</strong> Listeners can click Speak (Mic) or type questions to pause the episode in real time.</li>
+                        <li><strong>Zero-Fluff Factual Grounding:</strong> Host A defines terms immediately, relates them back to Host B, and resumes playback smoothly.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "🏗️ System Architecture",
+                content: `
+                    <ul>
+                        <li><strong>Frontend Studio:</strong> Dark glassmorphic interface with real-time sound equalizers and subtitle teleprompter.</li>
+                        <li><strong>LLM Multi-Model Engine:</strong> Google Gemini with instant failover across Flash models for 0ms downtime.</li>
+                        <li><strong>Multi-Tier Voice Synthesis:</strong> ElevenLabs Conversational Voice API + Resilient browser speech synthesis.</li>
+                        <li><strong>Voice Recognition:</strong> Web Speech API for instantaneous listener speech-to-text.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "⚡ Autonomous Dialogue Generation",
+                content: `
+                    <ul>
+                        <li><strong>Instant Article Scraping:</strong> REST summarization parses Wikipedia, Substack, and tech articles in 150ms.</li>
+                        <li><strong>Intelligent Prompt Engine:</strong> Automatically balances dialogue turn-taking, banter, and deep explanations.</li>
+                        <li><strong>No Stalling or Freezes:</strong> Generates realistic 8-12 turn scripts in under 2 seconds.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "🎯 Zero-Fluff Live Q&A Accuracy",
+                content: `
+                    <ul>
+                        <li><strong>Immediate Definition:</strong> If a listener asks "What is AGI?", sentence 1 immediately gives the authoritative definition.</li>
+                        <li><strong>Contextual Continuity:</strong> Sentence 2 connects that concept cleanly back to what Host B and Host A were discussing.</li>
+                        <li><strong>Instant Resumption:</strong> The episode continues right from the exact paused sentence.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "⏹️ Presentation Mode & Judge Controls",
+                content: `
+                    <ul>
+                        <li><strong>Dedicated Stop Broadcast Button:</strong> Halts playback instantly if judges ask a question during presentations.</li>
+                        <li><strong>Pause & Resume:</strong> Freeze playback, answer questions, and unpause without reloading the page.</li>
+                        <li><strong>YouTube-Style Speed Selector:</strong> 0.75x, 1.0x, 1.25x, 1.5x, 2.0x playback speed pills.</li>
+                        <li><strong>Spacebar Hotkey:</strong> Toggle playback pause/resume anywhere in the room.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "🛡️ Technical Innovations & Resilience",
+                content: `
+                    <ul>
+                        <li><strong>Zero-Latency Localhost Execution:</strong> Complete offline reliability in lecture halls with zero reliance on cloud cold starts.</li>
+                        <li><strong>Chromium Watchdog Keepalive:</strong> Prevents browser speech synthesis engines from freezing on long lines.</li>
+                        <li><strong>Non-Blocking Promise Cancel-Resolver:</strong> Guarantees instantaneous audio halt upon user interruption.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "📈 Business Impact & Scalability",
+                content: `
+                    <ul>
+                        <li><strong>Newsletter Publishing:</strong> 10x listener engagement for Substack, Medium, and corporate publications.</li>
+                        <li><strong>Enterprise Learning:</strong> Employees can listen to technical manuals and clarify complex jargon on the fly.</li>
+                        <li><strong>Accessibility:</strong> Enables visually impaired individuals to have interactive conversations with written media.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "🚀 Conclusion & Live Demonstration",
+                content: `
+                    <ul>
+                        <li><strong>Project Status:</strong> 100% Functional, verified locally, and open-source.</li>
+                        <li><strong>Demonstration Setup:</strong> Live on localhost:3000 for zero-latency presentation in LHC Room 003.</li>
+                        <li><strong>GitHub Repository:</strong> https://github.com/bharath-0814/dual-host-podcast-ai</li>
+                        <li><strong>Ready for live demonstration and judges' Q&A!</strong></li>
+                    </ul>
+                `
+            }
+        ];
+
+        let currentSlide = 0;
+
+        function renderSlide() {
+            const s = slides[currentSlide];
+            document.getElementById('slide-tracker').innerText = `Slide ${currentSlide + 1} of ${slides.length}`;
+            document.getElementById('slide-content').innerHTML = `
+                <div class="slide-title">${s.title}</div>
+                <div class="slide-body">${s.content}</div>
+            `;
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                renderSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                renderSlide();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        renderSlide();
+    </script>
+</body>
+</html>
