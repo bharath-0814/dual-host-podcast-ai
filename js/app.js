@@ -43,12 +43,24 @@ if ('speechSynthesis' in window) {
  * YouTube-style Playback Speed Controller
  */
 function setPlaybackSpeed(speed) {
-    currentPlaybackSpeed = speed;
+    currentPlaybackSpeed = parseFloat(speed) || 1.0;
     document.querySelectorAll('.btn-speed').forEach(btn => {
-        btn.classList.toggle('active', parseFloat(btn.dataset.speed) === speed);
+        btn.classList.toggle('active', parseFloat(btn.dataset.speed) === currentPlaybackSpeed);
     });
     if (currentAudio) {
-        currentAudio.playbackRate = currentPlaybackSpeed;
+        try {
+            currentAudio.playbackRate = currentPlaybackSpeed;
+        } catch (e) {}
+    }
+    // If browser speech synthesis is currently active, instantly restart the current line at the new rate
+    if ('speechSynthesis' in window && window.speechSynthesis.speaking && isBroadcastRunning && !isPaused && !isInterrupted) {
+        const line = globalScriptData[currentLineIndex];
+        if (line) {
+            try {
+                window.speechSynthesis.cancel();
+                speakTextRobust(line.text, line.speaker === "Host A", currentPlaybackSpeed);
+            } catch (e) {}
+        }
     }
 }
 
@@ -345,8 +357,9 @@ function speakTextRobust(text, isFemale, speed) {
             window.speechSynthesis.resume();
         } catch (e) {}
 
+        const effectiveRate = Math.min(2.0, Math.max(0.5, parseFloat(speed || currentPlaybackSpeed || 1.0)));
         const u = new SpeechSynthesisUtterance(text);
-        u.rate = speed || 1.0;
+        u.rate = effectiveRate;
         u.pitch = isFemale ? 1.15 : 0.95;
 
         const allVoices = window.speechSynthesis.getVoices();
@@ -383,9 +396,9 @@ function speakTextRobust(text, isFemale, speed) {
             }
         }, 1500);
 
-        // Safety timeout so it NEVER freezes
+        // Safety timeout so it NEVER freezes (scaled dynamically by speech rate)
         const wordCount = text.split(' ').length;
-        const maxTimeMs = Math.max(3500, (wordCount / 2.2) * 1000 + 3000);
+        const maxTimeMs = Math.max(2000, ((wordCount / (2.2 * effectiveRate)) * 1000) + 2500);
         const safetyTimer = setTimeout(done, maxTimeMs);
 
         try {
